@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Rebeca&#39;s Website</title>
+    <link>/post/</link>
+    <description>Recent content in Posts on Rebeca&#39;s Website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Fri, 11 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>R and Python</title>
+      <link>/post/2020/12/11/test-post/</link>
+      <pubDate>Fri, 11 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020/12/11/test-post/</guid>
+      <description>Reticulate The reticulate package in R allows users to use both python and R. It allows these languages to interact. This package is useful to combine the strengths of each language. It allows the user to keep everything in one file and allows it to flow better.
+Python and R in Action    via GIPHY  Python and R can work together to modify and combine strings.</description>
+    </item>
+    
+  </channel>
+</rss>

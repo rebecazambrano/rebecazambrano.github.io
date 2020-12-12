@@ -1,0 +1,306 @@
+---
+title: 'Project 1: Exploratory Data Analysis'
+author: "Rebeca Zambrano rz4882"
+date: "2020-10-18"
+output:
+  html_document: default
+  pdf_document: default
+---
+<center>
+![](/project/project1_files/pexels-johnmark-smith-2726370.jpg){width=70%}
+</center>
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+## Introduction
+  I chose to download my Netflix viewing history and I combined it with a weather dataset. I requested my viewing history from Netflix. The variables it includes are profile name, start time, duration, attributes, title, supplemental video type, device type, bookmark, latest bookmark, and country. I obtained my weather dataset mostly from https://www.visualcrossing.com. I also had to use https://www.wunderground.com/history/. I had to combine both of these resources because https://www.visualcrossing.com had a fee after a certain amount of data. I compared the temperatures to the second source I used and they were almost exactly the same (they differed by decimal places). The first website gave me more information than the second one. Therefore I combined them to have the following variables: location, date, maximum temperature, minimum temperature, average temperature, and precipitation. When I created the weather dataset I got the following columns as well: X7, X8, X9, X10, and X11. I got these random columns due to the format of the CSV file.
+  
+These datasets were interesting to me because I wanted to see how much Netflix I actually watch. I feel like I am going to expose myself for the amount of Netflix I consume and I hope it isn't too crazy. I usually always have something playing in the background or I just become obsessed with a show. I didn't want to just expose myself so I also analyzed my family's accounts. I wanted to see if the weather impacted how much my family and I watch Netflix. When it's raining I usually stay indoors and just want to be cozy. I think that higher levels of precipitation may lead to higher hours of watch time. I also thought that when it's really hot outside I tend to stay indoors which may lead to more watch time as well. When the weather is nice I try to enjoy the outdoors and don't spend much time on Netflix. I am really interested to see my Netflix tendencies.
+
+
+## Tidying
+I got the weather dataset and deleted the X7, X8, X9, X10, and X11 columns. I separated the `Date` variable then united it to make it a character variable instead of a date variable. This way the Netflix and weather dataset would have the same `Date` variable.
+```{r}
+library(tidyverse)
+getwd()
+weather <- read_csv("weather.csv")
+weather %>% select(-X7, -X8, -X9, -X10, -X11) %>% 
+  separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  unite(Year, Month, Day, col="Date", sep="-")  ->weather
+```
+
+I cleaned my Netflix dataset by deleting the `attributes`, `supplemental video type`, `device type`, `bookmark`, and `latest bookmark` variables. I filtered the dataset to only include the US since the weather dataset is for Dallas. By getting rid of the other countries (Australia), I lose a lot of the hours I consumed while abroad. This could affect the durations during the months of February to March of 2020. I got rid of the Pan and Kids profiles because my family doesn't really use them. I also separated the `Start Time` variable to have a column for `Date` and another for `Time`.
+```{r}
+netflixviews <- read_csv("ViewingActivity.csv")
+netflixviews %>% select(-Attributes, -`Supplemental Video Type`, 
+                        -`Device Type`, -Bookmark, -`Latest Bookmark`) %>%
+  filter(Country == "US (United States)") %>% 
+  filter(str_detect(`Profile Name`, "Pan", negate = TRUE)) %>%
+  filter(str_detect(`Profile Name`, "Kids", negate = TRUE)) %>%
+  separate(`Start Time`, c("Date", "Time"), " ")  ->netflixviews
+```
+## Joining/Merging
+
+I joined the Netflix and weather dataset using full_join because I wanted to retain all the original data. The only common ID between the two datasets is the `Date` therefore I didn't want any rows to be dropped. I filtered the `Title` containing the following strings because they were trailers/clips that were watched and I did not want to count those. I also split the `Title` into `Show`, `Season`, and `Episode`. I dropped the `Season` and `Episode` variables to have a cleaner dataset. The problem with dropping these cases is not knowing what episode or season each row is representing. 
+```{r}
+fulldata <- netflixviews %>% full_join(weather, by=c("Date"="Date"))
+
+fulldata %>% filter(str_detect(Title, "Trailer", negate = TRUE)) %>%
+  filter(str_detect(Title, "hook", negate = TRUE)) %>% 
+  filter(str_detect(Title, "Clip", negate = TRUE)) %>%
+  filter(str_detect(Title, "clip", negate = TRUE)) %>%
+  filter(str_detect(Title, "HIDDEN", negate = TRUE)) %>%
+  filter(str_detect(Title, "Clip", negate = TRUE)) %>%
+  filter(str_detect(Title, "preview", negate = TRUE)) %>%
+  separate(Title, c("Show", "Season", "Episode"), ":") %>%
+  select(-Season, -Episode) -> fulldata
+
+fulldata
+```
+
+## Wrangling
+
+**1. I wanted to see during what "season" we have seen Netflix the most. I separated the data by spring semester(January-May), summer(June-August), or fall semester(September-December). I wanted it to match up with my school schedule.**
+```{r}
+fulldata %>% group_by(`Profile Name`) %>% 
+  separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  filter(Month == '09' | Month == '10' | Month == '11' | Month == '12') %>%
+  summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("Fall_Hours"), " ")
+
+fulldata %>% group_by(`Profile Name`) %>% 
+  separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  filter(Month == '06' | Month == '07' | Month == '08') %>%
+  summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("Summer_Hours"), " ")
+
+fulldata %>% group_by(`Profile Name`) %>% 
+  separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  filter(Month =='01'|Month =='02'|Month =='03'|Month =='04'|Month =='05') %>%
+  summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("Spring_Hours"), " ")
+```
+I discovered that so far I mostly watch Netflix during school semesters than during the summer. Jr. mostly has watched during the fall and Nancy during the summer but not much more than the fall.
+
+
+
+**2. Next, I wanted to see if more than an inch of precipitation caused a difference in the mean duration.**
+```{r}
+fulldata %>% filter(Precipitation >= 1) %>% group_by(`Profile Name`) %>%
+  summarise(mean_duration=mean(Duration)) %>% 
+  mutate(mean_hours=mean_duration/3600) %>%
+  select(-mean_duration) %>% separate(mean_hours, c("Mean_Hours"), " ")
+
+fulldata %>% filter(Precipitation < 1) %>% group_by(`Profile Name`) %>%
+  summarise(mean_duration=mean(Duration)) %>% 
+  mutate(mean_hours=mean_duration/3600) %>%
+  select(-mean_duration) %>% separate(mean_hours, c("Mean_Hours"), " ")
+```
+There didn't seem to be a big difference between the mean hours watched when precipitation was less than 1 inch than more than 1 inch. The biggest difference can be observed under Nancy who watched about 0.2 more mean hours when the precipitation was above an inch.
+
+
+**3. I wanted to see if when the maximum temperature was over 90 degrees if that would affect our mean viewing hours.**
+```{r}
+fulldata %>% filter(`Maximum Temperature` >= 90) %>% group_by(`Profile Name`) %>%
+  summarise(mean_duration=mean(Duration)) %>% 
+  mutate(mean_hours=mean_duration/3600) %>%
+  select(-mean_duration) %>% separate(mean_hours, c("Mean_Hours"), " ")
+
+fulldata %>% filter(`Maximum Temperature` < 90) %>% group_by(`Profile Name`) %>%
+  summarise(mean_duration=mean(Duration)) %>% 
+  mutate(mean_hours=mean_duration/3600) %>%
+  select(-mean_duration) %>% separate(mean_hours, c("Mean_Hours"), " ")
+```
+There wasn't a big difference between the mean hours watched between the two temperature ranges.
+
+
+**4. I wanted to see which person had seen the most distinct shows/movies.**
+```{r}
+fulldata %>% group_by(`Profile Name`) %>% summarize(n_distinct(Show))
+```
+I, Rebeca, have watched the most distinct titles. 
+
+**5. I wanted to explore to see which year and months we have viewed the most hours.**
+```{r}
+fulldata %>% separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  group_by(Month) %>% summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("total_hours"), " ") %>%
+  mutate(total_hours=as.numeric(as.character(total_hours))) %>%
+  arrange(total_hours)
+
+fulldata %>% separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  group_by(Year) %>% summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("total_hours"), " ") %>%
+  mutate(total_hours=as.numeric(as.character(total_hours))) %>%
+  arrange(total_hours)
+```
+We have collectively watched the most hours in May. The year with the most total hours watched was 2019.
+
+
+
+**6. I wanted to see what period of time we watch Netflix. I split the time from 8 pm to 7 am and 7 am to 8 pm.**
+
+```{r}
+fulldata %>% separate(Time, c("Hour", "Minute", "Second"), ":") %>%
+  mutate(Hour=as.numeric(as.character(Hour))) %>% 
+  filter(Hour >=20 | Hour <=7) %>% 
+  summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("total_hours"), " ") %>%
+  mutate(total_hours=as.numeric(as.character(total_hours))) %>%
+  arrange(total_hours)
+
+fulldata %>% separate(Time, c("Hour", "Minute", "Second"), ":") %>%
+  mutate(Hour=as.numeric(as.character(Hour))) %>% 
+  filter(Hour <=20 | Hour >=7) %>% 
+  summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("total_hours"), " ") %>%
+  mutate(total_hours=as.numeric(as.character(total_hours))) %>%
+  arrange(total_hours)
+```
+We have watched more hours of Netflix between 7 am and 8 pm.
+
+
+
+**7. I wanted to see what shows I have personally spent most of my hours on. I start a lot of new shows and I know I have watched The Office a couple of times.**
+```{r}
+fulldata %>% filter(`Profile Name` == "Rebeca") %>%
+  group_by(Show) %>% summarize(total_secs=sum(Duration)) %>% 
+  mutate(total_hours=total_secs/3600) %>%
+  select(-total_secs) %>% separate(total_hours, c("total_hours"), " ") %>%
+  mutate(total_hours=as.numeric(as.character(total_hours))) %>%
+  arrange(desc(total_hours))
+```
+Most of my total hours have been spent watching shows like The Office, Supernatural, and Criminal Minds. 
+
+
+
+Before I summarized my data I had to rewrite the variable `Duration` to keep it in hours instead of as a variable in the time format. I summarized my data by finding the minimum, maximum, mean, standard deviation, median, and variance of all the numeric variables. I also grouped it by show to see the summary conditions while the show was watched. I pivoted the table to be neater. I wanted to keep the variables in a separate column because it’s easier to scroll through and see the condition (mean, median, etc.) across all the numeric variables. I also created a correlation matrix with the numeric variables. I then grouped the data by the `Profile Name` and `Show` to see how many times we clicked that show, our mean duration for each click, and how many distinct days we watched the show.
+```{r}
+fulldata %>% separate(Time, c("Hour", "Minute", "Second"), ":") %>%
+  mutate(Hour=as.numeric(as.character(Hour))) %>%
+  mutate(Minute=as.numeric(as.character(Minute))) %>%
+  mutate(Second=as.numeric(as.character(Second))) %>%
+  mutate(Duration=Hour + Minute/60 + Second/3600) %>%
+  select(-Hour,-Minute,-Second)->fulldata1
+
+fulldata1 %>% group_by(Show) %>% 
+  summarize_if(is.numeric, list(min=min, max=max, mean=mean, sd=sd,
+                                median=median, var=var),na.rm=T) %>%
+  pivot_longer(-1) %>% separate(name, into=c("name", "variable"), sep="_") %>%
+    pivot_wider(names_from="name", values_from="value") %>%
+  unnest(`Maximum Temperature`, `Minimum Temperature`, `Average Temperature`,
+         Precipitation) %>% na.omit()
+
+fulldata1 %>% select_if(is.numeric) %>% cor(use="pair")
+
+fulldata1 %>% group_by(`Profile Name`, Show) %>% 
+  summarize(n(), Mean_Duration=mean(Duration), Days_Spent=n_distinct(Date)) %>%
+  arrange(desc(Days_Spent))
+```
+The first table shows all the variables in accordance with the show. For each show watched we can see the duration, temperatures, and precipitation. I also decided to remove rows with NA's to have a cleaner table and most of the NA's included the full row.
+ The correlation matrix shows a pretty strong positive correlation between `Maximum Temperature` and `Minimum Temperature`, `Maximum Temperature` and `Average Temperature`, and `Minimum Temperature` and `Average Temperature`. It makes sense because the temperatures are related, when the maximum temperature is higher usually the minimum temperature is higher as well. The average is also correlated because it's just the average between the high and low temperatures. The correlations with `Duration` were pretty low, close to 0, or negative. The correlations with `Precipitation` follow the same trend as Duration. This means that there isn't a correlation between these variables.
+The third table shows the number of times the title is present in the dataset, the mean duration spent on the show, and the distinct number of days that were spent on the show. It is grouped by the `Profile` and `Show`. I arranged the days spent on the distinct shows to see which title has been seen the most distinct days. The show that has been seen the most distinct days is Supernatural at 124 days.
+
+
+##Visualizing
+```{r}
+#Correlation Heatmap
+cormat <- fulldata1 %>% select_if(is.numeric) %>% cor(use="pair")
+tidycor <- cormat %>% as.data.frame %>% rownames_to_column("var1") %>%
+  pivot_longer(-1,names_to="var2",values_to="correlation")
+tidycor
+tidycor%>%
+  ggplot(aes(var1,var2,fill=correlation))+geom_tile()+
+  scale_fill_gradient2(low="black",mid="white",high="blue")+
+  geom_text(aes(label=round(correlation,2)),color = "black", size = 4)+
+  theme(axis.text.x = element_text(angle = 90, hjust=1))+ coord_fixed() 
+```
+
+
+```{r}
+#ggplot1
+fulldata1 %>% separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  group_by(Month, Year) %>%
+  mutate(Mean_Duration=mean(Duration), 
+         Mean_Precipitation=mean(Precipitation)) %>%
+  ggplot(aes(x = Month, y = Mean_Duration, color = Year)) +
+  geom_point(aes(color=Year, size=Mean_Precipitation)) + 
+  geom_line(aes(group = Year)) + scale_color_brewer(palette = "Dark2")+
+  ggtitle("Yearly Netflix Watch Time") + ylab("Mean Duration (Hours)") +
+  xlab("Month")
+```
+I plotted the mean hours watched each month and year. The size of the data point shows the mean precipitation of the corresponding month and year. With the exception of January 2020, most of the months that have a pretty high mean of precipitation had a mean viewing duration above 11 hours. The mean viewing duration across the plot is relatively close to 12 hours. However, April 2018 stood out for its low mean. There also seems to be a spike in July of both 2018 and 2020. The year that varied the most is 2018 while 2019 was pretty consistent. September of 2018 also stands out for its large mean precipitation.
+
+
+
+```{r}
+#ggplot2
+fulldata1 %>% separate(Date, c("Year", "Month", "Day"), "-") %>%
+  group_by(Month, `Profile Name`) %>% 
+  ggplot(aes(Month, Duration, fill=`Profile Name`))+ 
+  scale_fill_brewer(palette = "Paired") +
+  geom_bar(stat="summary")+ theme(legend.position ="none" ) +
+  facet_wrap(~`Profile Name`) + ggtitle("Monthly Mean Hours Watched") +
+  ylab("Mean Duration (Hours)") + xlab("Month") +
+  scale_y_continuous(breaks=seq(0,20,2)) + geom_errorbar(stat="summary")
+```
+I wanted to see how the mean viewing duration varied between profiles and months. I also added error bars to show the variance of the monthly viewing duration throughout the years. Jr.'s means are pretty high but some of the errorbars are pretty long meaning the variance is wider for those months. The highest means are during the summer months of July and August. Nancy has a lot of variance throughout the months. It makes sense because out of the three of us she's the one that watches Netflix the least. She has a wider variance of viewing history. The greatest two means are May and March. My profile (Rebeca) shows that I am pretty consistent with my Netflix viewing. I have smaller errorbars, meaning lower variance, and my means are all relatively close. The largest mean is in the month of July.
+```{r}
+#ggplot3
+fulldata1 %>% separate(Date, c("Year", "Month", "Day"), "-") %>% 
+  filter(Year=="2019") %>%
+  ggplot(aes(x=`Maximum Temperature`,y=Duration, color=Month))+ 
+  geom_point(stat="summary") + scale_y_continuous(breaks=seq(0,25,5)) +
+  scale_x_continuous(breaks=seq(30,105,5))+
+  ggtitle("2019 Viewing Duration Across Maximum Temperatures ") +
+  ylab("Duration (hours)") +xlab("Maximum Temperature(ºF)") 
+```
+I plotted the `Duration` during the year 2019. I wanted to see how the maximum temperature interacted with viewing duration. I used the maximum temperature because I wanted to get the peak temperature of each day. Most of the higher duration values, above 20 hours, are seen in temperatures between 50 and 70. Also, the lower mean duration is seen between 50 and 70 degrees. The mean duration is more compact in temperatures above 90 degrees. The lowest mean is at 50 degrees in the month of October which had a mean of 0 hours. The largest mean is at about 23 hours in the month of October with a maximum temperature of 66 degrees. There doesn't seem to be a trend between `Duration` and the `Maximum Temperature`.
+
+
+## Dimensional Reduction
+
+```{r}
+library(cluster)
+pam_dat<-fulldata1%>%select_if(is.numeric) 
+sil_width<-vector()
+for(i in 2:10){
+pam_fit <- pam(pam_dat, k = i)
+sil_width[i] <- pam_fit$silinfo$avg.width
+}
+ggplot()+geom_line(aes(x=1:10,y=sil_width))+
+  scale_x_continuous(name="k",breaks=1:10)
+
+
+pam2 <-fulldata1 %>% select_if(is.numeric)  %>% scale %>% pam(2)
+pam2
+
+final <- fulldata1 %>% select_if(is.numeric) %>% 
+  mutate(cluster=as.factor(pam2$clustering))
+
+library(GGally)
+ggpairs(final, columns=1:4, aes(color=cluster))
+
+plot(pam2,which=2)
+
+ggplot(final, aes(x=`Average Temperature`,y=Duration, 
+                  color=cluster))+geom_point()
+
+library(plotly)
+final%>%plot_ly(x= ~`Average Temperature`, y = ~Duration, z = ~Precipitation,
+                color= ~cluster,type = "scatter3d", mode = "markers",
+                symbol = ~cluster, symbols = c('x','o')) %>%
+  layout(autosize = F, width = 900, height = 400)
+
+```
+
+I did PAM clustering on my data. From the dataset, I selected all the numeric variables. I started by computing the average silhouette width to see the number of clusters I should use. I plotted the number of clusters and decided to use 2 since it has the largest width. Then I selected all the numeric variables again and scaled them and piped them through using 2 clusters. I saved the clusters to the dataset. I then visualized the pairwise combinations of the four numeric variables. The strongest overall correlation (negative or positive) is `Average Temperature` and `Minimum Temperature` with a correlation of 0.980. `Duration` has correlations close to zero which means it isn't correlated strongly to the other variables. It shows that the `Duration` of watching Netflix isn't tied to the temperature or precipitation. I made a silhouette plot to see how good the final fit of the cluster solution was. The average silhouette width is 0.43 which means the structure is weak and could be artificial. This can be further seen in the scatterplot. The two clusters overlap and are really close to each other. There isn't much of a distinction. I also made a 3D graph to visualize three variables and the clusters. It further shows that there isn't a strong distinction between clusters.

@@ -1,0 +1,94 @@
+---
+title: R and Python
+author: ''
+date: '2020-12-11'
+slug: test-post
+categories: []
+tags: []
+description: ''
+---
+# Reticulate
+
+The reticulate package in R allows users to use both python and R. It allows these languages to interact. This package is useful to combine the strengths of each language. It allows the user to keep everything in one file and allows it to flow better.
+
+##Python and R in Action
+
+<center>
+<iframe src="https://giphy.com/embed/35Y5mMSWwoipG" width="480" height="266" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/elephant-35Y5mMSWwoipG">via GIPHY</a></p>
+</center>
+
+Python and R can work together to modify and combine strings. 
+
+```{R}
+library(reticulate)
+
+phrase<- "African elephants are the world's largest land animal!"
+phrase2<- "Elephants have about 150,000 muscle units in their trunk."
+phrase3<- "Elephants need about 150 kg of food everyday!"
+```
+
+
+```{python}
+facts="Fun fact:"
+print(facts,r.phrase)
+print(facts,r.phrase2)
+print(facts,r.phrase3)
+```
+
+You can also use regular expressions to extract information from text by searching for matches of a given pattern. The string is from a R chunk while the matches are found in a python chunk. 
+
+The following example shows the use of regular expression in python to extract IP addresses from a string in R.
+```{R}
+string2="Jan 13 00:48:59: DROP service 68->67(udp) from 213.92.153.167 to 69.43.107.219, prefix: \"spoof iana-0/8\" \
+(in: eth0 69.43.112.233(38:f8:b7:90:45:92):68 -> 217.70.100.113(00:21:87:79:9c:d9):67 UDP len:576 ttl:64) \
+Jan 13 12:02:48: ACCEPT service dns from 74.125.186.208 to firewall(pub-nic-dns), prefix: \"none\" \
+(in: eth0 74.125.186.208(00:1a:e3:52:5d:8e):36008 -> 140.105.63.158(00:1a:9a:86:2e:62):53 UDP len:82 ttl:38) \
+Jan 13 17:44:52: DROP service 68->67(udp) from 172.45.240.237 to 217.70.177.60, prefix: \"spoof iana-0/8\" \
+(in: eth0 216.34.90.16(00:21:91:fe:a2:6f):68 -> 69.43.85.253(00:07:e1:7c:53:db):67 UDP len:328 ttl:64) \
+Jan 13 17:52:08: ACCEPT service http from 213.121.184.130 to firewall(pub-nic), prefix: \"none\" \
+(in: eth0 213.121.184.130(00:05:2e:6a:a4:14):8504 -> 140.105.63.164(00:60:11:92:ed:1b):80 TCP flags: ****S* len:52 ttl:109)"
+```
+
+```{python}
+import re
+re.findall(r"\d+[.]\d+[.]\d+[.]\d+",r.string2) 
+```
+
+The following example shows the use of regular expression in python to extract urls from a string in R.
+```{R}
+string4="<http://www.classmates.com/go/e/200988231/CC123101BT/CM00>  <http://graphics.classmates.com/graphics/spacer.gif>  <http://graphics.classmates.com/graphics/sp \
+You have received this email because the requester specified you as their Manager. Please click http://itcapps.corp.enron.com/srrs/auth/emailLink.asp?ID=000000000053239&Page=Approval to review and act upon this request.     Request ID          : 000000000053239 Request Create Date\
+ronOnline.   The following User ID and Password will give you access to live prices on the web-site http://www.enrononline.com.  User ID: ADM40601 Password: WELCOME!   (note these are case sensitive)    Please keep your User I\
+<http://www.classmates.com/go/e/200988231/CC122401BC/CM00>  <http://graphics.classmates.com/graphics/spacer.gif>  <http://graphics.classmates.com/graphics/sp\
+http://www.btinternet.com/~pir8/arnie/\
+n, just click on the following hyperlink and complete the order form by Tuesday February 12, 2002.  http://zzz1.net/rd/rd.asp?ZXU=562&ZXD=1471085&UID=1471085  If you cannot link directly to the web site, simply cut and paste the address listed above into yo\
+been successful getting in the group. To access the group should go to your web browser and type in http://www.egroups.com  The screen should show that you are a member of smu-betas group. When you replied to the original \
+mber and password. For more details on how to log-on to eHRonline, see step-by-step instructions at http://isc.enron.com/site/doclibrary/user/ 2. Navigate to the pay advice using the following navigation menus: ? Pay Information ? Paycheck I\
+In addition to World Markets Energy information  <http://esource.enron.com/worldmarket.asp> and Country Analysis and Forecasting, <http://esource.enron.com/worldmarket_CountryAnalysis.asp>  \
+<http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged> A WEEKEND PAIR-A-DICE <http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c \
+Mr. Skilling:  Your P number is P00500599.  For your convenience, you can also go to http://isc.enron.com/site/ under"
+```
+
+```{python}
+re.findall(r"http\S+\b",r.string4)
+```
+
+You can also work with data between R and python. 
+
+This is an R chunk:
+```{R}
+quakes<-quakes
+```
+
+While this is a python chunk:
+```{python}
+r.quakes.mag.mean()
+r.quakes.depth.mean()
+r.quakes.mag.median()
+r.quakes.depth.median()
+r.quakes.mag.std()
+r.quakes.depth.std()
+```
+<center>
+![](/post/2020-12-11-test-post_files/pexels-markus-spiske-225769.jpg){width=50%}
+</center>

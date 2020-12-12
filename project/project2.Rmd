@@ -1,0 +1,303 @@
+---
+title: "Project 2"
+author: "Rebeca Zambrano rz4882"
+date: "2020-11-22"
+output: html_document
+---
+<center>
+<iframe src="https://giphy.com/embed/XZn9yRAjnVEQ0" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/walking-penguin-waddling-XZn9yRAjnVEQ0">via GIPHY</a></p>
+</center>
+```{r setup, include=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,fig.align="center",warning=FALSE,message=FALSE,fig.width=8, fig.height=5, linewidth=60)
+options(tibble.width = 100,width = 100)
+library(tidyverse)
+```
+
+## Introduction
+
+I am using the `penguins` dataset, found on the tidytuesday site. The data was collected by Dr. Kristen Gorman and the Palmer Station, Antarctica LTER. The package that was created for this data is the `palmerpenguins` package and it contains two datasets, `penguins` and `penguins_raw`. The `penguins` dataset contains 344 observations and 8 variables. The variables it contains are `species`, `island`, `bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`, `body_mass_g`, `sex`, and `year`. There are 3 penguin species that were observed, Adelie, Gentoo, and Chinstrap. The 3 islands that were recorded were Biscoe, Dream, and Torgersen. The bill length, bill depth, and flipper length were all measured in millimeters. The body mass was measured in grams. The `palmerpenguins` package's goal is to provide a great dataset for data exploration and visualization. It is an alternative to `iris`.
+```{r}
+penguins<- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-07-28/penguins.csv')
+
+penguins <- penguins %>% na.omit()
+
+penguins %>% group_by(species, island) %>% summarize(count=n())
+```
+*I wanted to omit all the NA's, this leaves 333 observations. I also wanted to see the distribution of the different species on the varying islands.*
+
+## MANOVA, ANOVA, and Post-Hoc T-Tests
+
+```{r}
+#MANOVA
+man1<-manova(cbind(bill_length_mm,bill_depth_mm,
+                   flipper_length_mm, body_mass_g)~species, data=penguins)
+summary(man1)
+
+#ANOVA
+summary.aov(man1)
+
+#Mean Differences
+penguins%>%group_by(species)%>%summarize(mean(bill_length_mm),
+                                        mean(bill_depth_mm),
+                                        mean(flipper_length_mm),
+                                        mean(body_mass_g))
+#Post-Hoc T Tests
+pairwise.t.test(penguins$bill_length_mm,penguins$species, p.adj="none")
+pairwise.t.test(penguins$bill_depth_mm,penguins$species, p.adj="none")
+pairwise.t.test(penguins$flipper_length_mm,penguins$species, p.adj="none")
+pairwise.t.test(penguins$body_mass_g,penguins$species, p.adj="none")
+
+
+#Probability of Type I Error
+1-.95^17
+.05/17
+
+#MANOVA Assumptions
+library(rstatix)
+
+group <- penguins$species 
+DVs <- penguins %>% select(bill_length_mm,bill_depth_mm,flipper_length_mm,
+                           body_mass_g)
+
+sapply(split(DVs,group), mshapiro_test)
+```
+
+I performed the MANOVA to test whether any of the numeric variables show a mean difference across the three penguin species. The MANOVA test was significant meaning that for at least one dependent variable, at least one species' mean is different. Since the MANOVA test was significant I ran univariate ANOVAs to see which variables were significant. The numeric variables (`bill_length_mm`, `bill_depth_mm`, `flipper_length_mm`, `body_mass_g`) were significant, at least one species differs for each dependent variable.  
+I performed 1 MANOVA test, 4 ANOVAs, and 12 t-tests. A total of 17 tests were performed. The probability of at least one type I error is 0.582. The Bonferroni correction is 0.0029.
+Using the Bonferroni correction, `bill_length` significantly differed between Adeline and Chinstrap, and between Adelie and Gentoo. The `bill_depth` significantly differed between Adelie and Gentoo, and Chinstrap and Gentoo. All three species were found to differ significantly for `flipper_length`. Adelie and Gentoo, and Chinstrap and Gentoo were found to differ significantly in terms of `body_mass`.
+There are many MANOVA assumptions. Some assumptions include having random samples, independent observations, multivariate normality of dependent variables, homogeneity of within-group covariance matrices, and linear relationships among dependent variables. I tested the multivariate normality for each group and they all had p-values less than 0.5. This means that the assumption was violated. 
+
+## Randomization Test
+
+```{r}
+penguins%>% group_by(sex)%>% summarize(means=mean(flipper_length_mm)) %>%
+  summarize(`mean_diff`=diff(means))
+
+set.seed(348)
+rand_dist<-vector()
+for(i in 1:5000){
+new<-data.frame(flipper_length_mm=sample(penguins$flipper_length_mm),sex=penguins$sex)
+rand_dist[i]<-mean(new[new$sex=="male",]$flipper_length_mm)-
+mean(new[new$sex=="female",]$flipper_length_mm)}
+
+hist(rand_dist)
+
+mean(rand_dist>7.142316	| rand_dist < -7.142316	) 
+
+
+t.test(data=penguins,flipper_length_mm~sex) 
+
+```
+I decided to compute a mean difference test statistic because I am looking at a categorical variable, `sex`, and a numeric variable, `flipper_length_mm`. The null hypothesis is that the mean flipper length is the same between female and male penguins. The alternative hypothesis is that the mean flipper length is different for female and male penguins.
+I computed the p-value for the randomization test and I got 0. I conducted a t-test to compare the results and to see if the value of 0 was correct. The conclusion is that the null hypothesis can be rejected. The p-value is very small, less than 0.05. This means that the mean flipper length is different between female and male penguins.
+
+
+## Linear Regression Model
+
+```{r}
+#Mean-Center Variable
+penguins$bill_length_mm_c <- penguins$bill_length_mm -
+  mean(penguins$bill_length_mm)
+
+#Linear Regression Model
+fit<- lm(body_mass_g~species*bill_length_mm_c, data = penguins)
+summary(fit)
+
+#Regression Plot
+penguins %>% ggplot(aes(bill_length_mm_c,body_mass_g, color = species))+
+  geom_point()+
+  geom_smooth(method = "lm") 
+
+
+#Assumptions Tests
+resids<- fit$residuals
+fitvals<-fit$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color='red')
+
+shapiro.test(resids)
+
+library(sandwich); library(lmtest)
+bptest(fit) 
+
+
+#Robust Standard Errors
+coeftest(fit, vcov = vcovHC(fit))#corrected
+
+summary(fit)$coef  #uncorrected
+```
+The intercept, 4190.74, is the mean/predicted body mass for Adelie penguins with average bill lengths. Chinstrap penguins with average bill length have a predicted body mass that is 743.84 mm less than Adelie penguins with average bill length. Gentoo penguins with average bill length have a predicted body mass that is 516.85 mm greater than Adelie penguins with average bill length. The bill length coefficient shows that for every 1-unit increase in bill length, the predicted body mass goes up 93.75 mm for Adelie penguins. The slope of bill length on body mass for Chinstrap penguins is 34.63 less than for Adeline penguins. The slope of bill length on body mass for Gentoo penguins is 13.49 greater than for Adelie penguins.
+I plotted the fitted values and residuals to check on the assumption of linearity. I conducted a Shapiro-Wilk test to test for normality. It failed to reject the null hypothesis, the true distribution is normal. I conducted a Breusch-Pagan test to formally assess homoskedasticity. It failed to reject the null hypothesis. The data is homoskedastic. 
+The robust SEs are slightly less than the uncorrected SEs.This means the p-value would also decrease and the t-statistics would increase.
+R^2, 0.7899, is the proportion of variation in the response variable explained by the overall model. The adjusted R^2, 0.7867, accounts for the penalty for each extra explanatory variable. 
+
+
+## Bootstrapped Standard Errors
+
+```{r}
+samp_distn<-replicate(5000, {
+  boot_dat <- sample_frac(penguins, replace=T)
+  fit2 <- lm(body_mass_g~species*bill_length_mm_c, data = boot_dat)
+  coef(fit2)
+})
+
+samp_distn %>% t %>% as.data.frame %>% summarize_all(sd)
+```
+Compared to the original SEs, the bootstrapped SEs are smaller. Since the SEs went down, the p-value goes down too. Compared to the robust SEs, the bootstrapped SEs are slightly smaller.
+
+
+
+## Logistic Regression Model Predicting Binary Variable Part 1
+
+```{r}
+#Binary Variable
+penguins%>%mutate(y=ifelse(sex=="female",1,0)) ->penguins1
+
+#Logistic Regression
+fit3<-glm(y~species+body_mass_g,data=penguins1,family="binomial")
+summary(fit3)
+
+exp(coef(fit3))
+
+prob <- predict(fit3, type="response")
+pred<- ifelse(prob>.5,1,0)
+
+#Confusion Matrix
+table(prediction=pred,truth=penguins1$y)%>%addmargins
+
+class_diag<-function(probs,truth){
+  
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE) truth<-as.numeric(truth)-1
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+  
+  data.frame(acc,sens,spec,ppv,auc)
+}
+
+#Accuracy, TPR, TNR, PPV, AUC
+class_diag(prob, penguins1$y)
+
+
+#Density Plot 
+penguins1$logit<-predict(fit3,type="link")
+
+penguins1%>%ggplot()+geom_density(aes(logit,color=sex,fill=sex), alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("logit (log-odds)")+
+  geom_rug(aes(logit,color=sex))
+
+#ROC curve
+library(plotROC) 
+ROCplot<-ggplot(penguins1)+geom_roc(aes(d=y,m=prob), n.cuts=0)
+ROCplot
+
+#AUC
+calc_auc(ROCplot)
+```
+Controlling for body mass, Gentoo and Adelie penguins are significantly different. Controlling for body mass, Chinstrap and Adelie penguins are not significantly different. Controlling for species, body mass has a significant negative impact on the odds of being female. The odds of being female for Gentoo penguins are 2.631x10^4 times that of Adelie penguins. Controlling for penguin species, for every 1-unit increase in body mass, odds of being female change by a factor of 0.9927.
+The confusion matrix is computed and allows us to be able to calculate the accuracy, sensitivity, specificity, and precision. I used the function `class_diag` to compute the values. The accuracy is 0.853, sensitivity is 0.861, specificity is 0.845, and precision is 0.845. The AUC is 0.936 which means it is great.
+
+
+## Logistic Regression Model Predicting Binary Variable Part 2
+
+
+```{r}
+penguins2 <- penguins1 %>% select(-bill_length_mm_c,-logit,-sex)
+
+#Logistic Regression
+fit4 <- glm(y~., data=penguins2, family="binomial")
+summary(fit4)
+
+#Classification Disgnostics
+prob1 <- predict(fit4, type="response")
+
+class_diag(prob1, penguins2$y)
+
+#10-Fold CV 
+set.seed(1234)
+k=10
+
+data1<-penguins2[sample(nrow(penguins2)),] 
+folds<-cut(seq(1:nrow(penguins2)),breaks=k,labels=F) 
+
+diags<-NULL
+for(i in 1:k){          
+  train<-data1[folds!=i,] 
+  test<-data1[folds==i,]  
+  
+  truth<-test$y
+  
+  fit5<- glm(y~., data=train, family = "binomial")
+  probs1<- predict(fit5, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs1,truth)) 
+}
+
+summarize_all(diags,mean)
+
+#LASSO 
+library(glmnet) 
+set.seed(1234)
+y<-as.matrix(penguins2$y)
+penguins_preds<-model.matrix(y~.,data=penguins2)[,-1]
+cv<-cv.glmnet(penguins_preds,y,family="binomial")
+lasso_fit<-glmnet(penguins_preds,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso_fit)
+
+
+#10-Fold CV With Selected Variables
+penguins2%>%mutate(Species.Chinstrap=ifelse(species=="Chinstrap",1,0)) ->penguins3
+
+set.seed(1234)
+k=10
+
+data1<-penguins3[sample(nrow(penguins3)),] 
+folds<-cut(seq(1:nrow(penguins3)),breaks=k,labels=F) 
+
+diags<-NULL
+for(i in 1:k){          
+  train<-data1[folds!=i,] 
+  test<-data1[folds==i,]  
+  
+  truth<-test$y
+  
+  fit6<- glm(y~bill_length_mm+bill_depth_mm+body_mass_g+Species.Chinstrap, data=train,
+             family= "binomial")
+  probs2<- predict(fit6, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs2,truth)) 
+}
+
+summarize_all(diags,mean)
+
+```
+For the in-sample classification diagnostics, the accuracy is 0.922, sensitivity is 0.927, specificity is 0.917, and precision is 0.916. The AUC is 0.978 which means it is great.
+These values differ for the 10-fold CV, all the values decreased slightly. The accuracy for the 10-fold CV is 0.913, sensitivity is 0.925, specificity is 0.902, and precision is 0.906. The AUC also decreased slightly to 0.969 which is still considered great. The values that were retained from LASSO were for the Chinstrap penguins, `bill_length_mm`, `bill_depth_mm`, and `body_mass_g`. Performing the 10-fold CV only using the variables lasso selected leads to an AUC slightly lower than the 10-fold CV with all the variables. It is also smaller than the in-sample classification diagnostics AUC. The AUC  decreased to 0.967 which is still considered great. The accuracy is 0.895, sensitivity is 0.882, specificity is 0.906, and precision is 0.910. 

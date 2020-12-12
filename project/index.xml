@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Rebeca&#39;s Website</title>
+    <link>/project/</link>
+    <description>Recent content in Projects on Rebeca&#39;s Website</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sun, 22 Nov 2020 00:00:00 +0000</lastBuildDate><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Project 2</title>
+      <link>/project/project2/</link>
+      <pubDate>Sun, 22 Nov 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>via GIPHY  Introduction I am using the penguins dataset, found on the tidytuesday site. The data was collected by Dr. Kristen Gorman and the Palmer Station, Antarctica LTER. The package that was created for this data is the palmerpenguins package and it contains two datasets, penguins and penguins_raw. The penguins dataset contains 344 observations and 8 variables. The variables it contains are species, island, bill_length_mm, bill_depth_mm, flipper_length_mm, body_mass_g, sex, and year.</description>
+    </item>
+    
+    <item>
+      <title>Project 1: Exploratory Data Analysis</title>
+      <link>/project/project1/</link>
+      <pubDate>Sun, 18 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Introduction I chose to download my Netflix viewing history and I combined it with a weather dataset. I requested my viewing history from Netflix. The variables it includes are profile name, start time, duration, attributes, title, supplemental video type, device type, bookmark, latest bookmark, and country. I obtained my weather dataset mostly from https://www.visualcrossing.com. I also had to use https://www.wunderground.com/history/. I had to combine both of these resources because https://www.</description>
+    </item>
+    
+  </channel>
+</rss>

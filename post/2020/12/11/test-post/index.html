@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Rebeca Zambrano" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../../img/favicon.ico">
+    <title>R and Python</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../../../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../../../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../../../../post/">BLOG</a></li>
+        
+        <li><a href="../../../../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../../../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../../../../post/2020/12/11/test-post/">R and Python</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         December 11, 2020 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="reticulate" class="section level1">
+<h1>Reticulate</h1>
+<p>The reticulate package in R allows users to use both python and R. It allows these languages to interact. This package is useful to combine the strengths of each language. It allows the user to keep everything in one file and allows it to flow better.</p>
+<div id="python-and-r-in-action" class="section level2">
+<h2>Python and R in Action</h2>
+<center>
+<iframe src="https://giphy.com/embed/35Y5mMSWwoipG" width="480" height="266" frameBorder="0" class="giphy-embed" allowFullScreen>
+</iframe>
+<p>
+<a href="https://giphy.com/gifs/elephant-35Y5mMSWwoipG">via GIPHY</a>
+</p>
+</center>
+<p>Python and R can work together to modify and combine strings.</p>
+<pre class="r"><code>library(reticulate)
+
+phrase&lt;- &quot;African elephants are the world&#39;s largest land animal!&quot;
+phrase2&lt;- &quot;Elephants have about 150,000 muscle units in their trunk.&quot;
+phrase3&lt;- &quot;Elephants need about 150 kg of food everyday!&quot;</code></pre>
+<pre class="python"><code>facts=&quot;Fun fact:&quot;
+print(facts,r.phrase)</code></pre>
+<pre><code>## Fun fact: African elephants are the world&#39;s largest land animal!</code></pre>
+<pre class="python"><code>print(facts,r.phrase2)</code></pre>
+<pre><code>## Fun fact: Elephants have about 150,000 muscle units in their trunk.</code></pre>
+<pre class="python"><code>print(facts,r.phrase3)</code></pre>
+<pre><code>## Fun fact: Elephants need about 150 kg of food everyday!</code></pre>
+<p>You can also use regular expressions to extract information from text by searching for matches of a given pattern. The string is from a R chunk while the matches are found in a python chunk.</p>
+<p>The following example shows the use of regular expression in python to extract IP addresses from a string in R.</p>
+<pre class="r"><code>string2=&quot;Jan 13 00:48:59: DROP service 68-&gt;67(udp) from 213.92.153.167 to 69.43.107.219, prefix: \&quot;spoof iana-0/8\&quot; \
+(in: eth0 69.43.112.233(38:f8:b7:90:45:92):68 -&gt; 217.70.100.113(00:21:87:79:9c:d9):67 UDP len:576 ttl:64) \
+Jan 13 12:02:48: ACCEPT service dns from 74.125.186.208 to firewall(pub-nic-dns), prefix: \&quot;none\&quot; \
+(in: eth0 74.125.186.208(00:1a:e3:52:5d:8e):36008 -&gt; 140.105.63.158(00:1a:9a:86:2e:62):53 UDP len:82 ttl:38) \
+Jan 13 17:44:52: DROP service 68-&gt;67(udp) from 172.45.240.237 to 217.70.177.60, prefix: \&quot;spoof iana-0/8\&quot; \
+(in: eth0 216.34.90.16(00:21:91:fe:a2:6f):68 -&gt; 69.43.85.253(00:07:e1:7c:53:db):67 UDP len:328 ttl:64) \
+Jan 13 17:52:08: ACCEPT service http from 213.121.184.130 to firewall(pub-nic), prefix: \&quot;none\&quot; \
+(in: eth0 213.121.184.130(00:05:2e:6a:a4:14):8504 -&gt; 140.105.63.164(00:60:11:92:ed:1b):80 TCP flags: ****S* len:52 ttl:109)&quot;</code></pre>
+<pre class="python"><code>import re
+re.findall(r&quot;\d+[.]\d+[.]\d+[.]\d+&quot;,r.string2) </code></pre>
+<pre><code>## [&#39;213.92.153.167&#39;, &#39;69.43.107.219&#39;, &#39;69.43.112.233&#39;, &#39;217.70.100.113&#39;, &#39;74.125.186.208&#39;, &#39;74.125.186.208&#39;, &#39;140.105.63.158&#39;, &#39;172.45.240.237&#39;, &#39;217.70.177.60&#39;, &#39;216.34.90.16&#39;, &#39;69.43.85.253&#39;, &#39;213.121.184.130&#39;, &#39;213.121.184.130&#39;, &#39;140.105.63.164&#39;]</code></pre>
+<p>The following example shows the use of regular expression in python to extract urls from a string in R.</p>
+<pre class="r"><code>string4=&quot;&lt;http://www.classmates.com/go/e/200988231/CC123101BT/CM00&gt;  &lt;http://graphics.classmates.com/graphics/spacer.gif&gt;  &lt;http://graphics.classmates.com/graphics/sp \
+You have received this email because the requester specified you as their Manager. Please click http://itcapps.corp.enron.com/srrs/auth/emailLink.asp?ID=000000000053239&amp;Page=Approval to review and act upon this request.     Request ID          : 000000000053239 Request Create Date\
+ronOnline.   The following User ID and Password will give you access to live prices on the web-site http://www.enrononline.com.  User ID: ADM40601 Password: WELCOME!   (note these are case sensitive)    Please keep your User I\
+&lt;http://www.classmates.com/go/e/200988231/CC122401BC/CM00&gt;  &lt;http://graphics.classmates.com/graphics/spacer.gif&gt;  &lt;http://graphics.classmates.com/graphics/sp\
+http://www.btinternet.com/~pir8/arnie/\
+n, just click on the following hyperlink and complete the order form by Tuesday February 12, 2002.  http://zzz1.net/rd/rd.asp?ZXU=562&amp;ZXD=1471085&amp;UID=1471085  If you cannot link directly to the web site, simply cut and paste the address listed above into yo\
+been successful getting in the group. To access the group should go to your web browser and type in http://www.egroups.com  The screen should show that you are a member of smu-betas group. When you replied to the original \
+mber and password. For more details on how to log-on to eHRonline, see step-by-step instructions at http://isc.enron.com/site/doclibrary/user/ 2. Navigate to the pay advice using the following navigation menus: ? Pay Information ? Paycheck I\
+In addition to World Markets Energy information  &lt;http://esource.enron.com/worldmarket.asp&gt; and Country Analysis and Forecasting, &lt;http://esource.enron.com/worldmarket_CountryAnalysis.asp&gt;  \
+&lt;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged&gt; A WEEKEND PAIR-A-DICE &lt;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c \
+Mr. Skilling:  Your P number is P00500599.  For your convenience, you can also go to http://isc.enron.com/site/ under&quot;</code></pre>
+<pre class="python"><code>re.findall(r&quot;http\S+\b&quot;,r.string4)</code></pre>
+<pre><code>## [&#39;http://www.classmates.com/go/e/200988231/CC123101BT/CM00&#39;, &#39;http://graphics.classmates.com/graphics/spacer.gif&#39;, &#39;http://graphics.classmates.com/graphics/sp&#39;, &#39;http://itcapps.corp.enron.com/srrs/auth/emailLink.asp?ID=000000000053239&amp;Page=Approval&#39;, &#39;http://www.enrononline.com&#39;, &#39;http://www.classmates.com/go/e/200988231/CC122401BC/CM00&#39;, &#39;http://graphics.classmates.com/graphics/spacer.gif&#39;, &#39;http://graphics.classmates.com/graphics/sp&#39;, &#39;http://www.btinternet.com/~pir8/arnie&#39;, &#39;http://zzz1.net/rd/rd.asp?ZXU=562&amp;ZXD=1471085&amp;UID=1471085&#39;, &#39;http://www.egroups.com&#39;, &#39;http://isc.enron.com/site/doclibrary/user&#39;, &#39;http://esource.enron.com/worldmarket.asp&#39;, &#39;http://esource.enron.com/worldmarket_CountryAnalysis.asp&#39;, &#39;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.com/english/casino/casinonew-fr.asp?isLogged=notlogged&#39;, &#39;http://ad.doubleclick.net/clk;3549492;6600300;c?http://www.sportingbetusa.c&#39;, &#39;http://isc.enron.com/site&#39;]</code></pre>
+<p>You can also work with data between R and python.</p>
+<p>This is an R chunk:</p>
+<pre class="r"><code>quakes&lt;-quakes</code></pre>
+<p>While this is a python chunk:</p>
+<pre class="python"><code>r.quakes.mag.mean()</code></pre>
+<pre><code>## 4.6204000000000001</code></pre>
+<pre class="python"><code>r.quakes.depth.mean()</code></pre>
+<pre><code>## 311.37099999999998</code></pre>
+<pre class="python"><code>r.quakes.mag.median()</code></pre>
+<pre><code>## 4.6</code></pre>
+<pre class="python"><code>r.quakes.depth.median()</code></pre>
+<pre><code>## 247.0</code></pre>
+<pre class="python"><code>r.quakes.mag.std()</code></pre>
+<pre><code>## 0.4027729708732527</code></pre>
+<pre class="python"><code>r.quakes.depth.std()</code></pre>
+<pre><code>## 215.53549802737808</code></pre>
+<center>
+<img src="../../../../../post/2020-12-11-test-post_files/pexels-markus-spiske-225769.jpg" style="width:50.0%" />
+</center>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../../../../js/docs.min.js"></script>
+<script src="../../../../../js/main.js"></script>
+
+<script src="../../../../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
